@@ -67,6 +67,9 @@ public class App {
         } else if (Utils.getConfigString("proxy.socks", null) != null) {
             Proxy.setSocks(Utils.getConfigString("proxy.socks", null));
         }
+        if (Utils.getConfigString("proxy.https", null) != null) {
+            Proxy.setHTTPSProxyUser(Utils.getConfigString("proxy.https", null));
+        }
 
         // This has to be here instead of handleArgs because handleArgs isn't parsed until after a item is ripper
         if (cl.hasOption("a")) {

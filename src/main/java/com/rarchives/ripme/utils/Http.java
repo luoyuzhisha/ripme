@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.json.JSONObject;
 import org.jsoup.Connection;
@@ -53,8 +54,33 @@ public class Http {
         connection.method(Method.GET);
         connection.timeout(TIMEOUT);
         connection.maxBodySize(0);
+        // set proxy host and port
+        if ("https".equals(getProtocol(url))) {
+            setProxyForHttps();
+        } else {
+            logger.debug("url is not https, not set proxy for jsoup connection");
+        }
     }
 
+    /**
+     * set proxy host and port for https Jsoup
+     * other connects set proxy at com.rarchives.ripme.App.main(String[])
+     * set user name and password at com.rarchives.ripme.App.main(String[])
+     */
+    private void setProxyForHttps() {
+        logger.debug("url is https, set proxy for jsoup connection");
+        String sockProxy = Utils.getConfigString("proxy.https", null);
+        if (StringUtils.isNotBlank(sockProxy)) {
+            if (sockProxy.lastIndexOf("@") != -1) {
+                sockProxy = sockProxy.substring(sockProxy.lastIndexOf("@") + 1);
+            }
+            String[] urlAndPort = sockProxy.split(":");
+            if(urlAndPort.length == 2) {
+                Integer port = Integer.valueOf(urlAndPort[1].trim());
+                connection.proxy(urlAndPort[0].trim(), port);
+            }
+        }
+    }
     // Setters
     public Http timeout(int timeout) {
         connection.timeout(timeout);
@@ -135,5 +161,17 @@ public class Http {
             }
         }
         throw new IOException("Failed to load " + url + " after " + this.retries + " attempts", lastException);
+    }
+    
+    private static String getProtocol(String url) {
+        if (StringUtils.isBlank(url)) {
+            // default is http
+            return "http";
+        }
+        if (url.trim().toLowerCase().startsWith("https")) {
+            return "https";
+        } else {
+            return "http";
+        }
     }
 }

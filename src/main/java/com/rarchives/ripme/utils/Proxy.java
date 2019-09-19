@@ -3,6 +3,9 @@ package com.rarchives.ripme.utils;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
+
 import java.util.HashMap;
 
 /**
@@ -94,6 +97,35 @@ public class Proxy {
         }
 
         System.setProperty("socksProxyHost", socksServer.get("server"));
+    }
+
+    /**
+     * This method cannot affect the Jsoup method
+     * for Jsoup, need set proxy host and port on connect
+     * @param fullproxy
+     */
+    public static void setHTTPSProxyUser(String fullproxy) {
+        if (StringUtils.isEmpty(fullproxy)) {
+            return;
+        }
+        Map<String, String> proxyServer = parseServer(fullproxy);
+
+        if (proxyServer.get("user") != null && proxyServer.get("password") != null) {
+            Authenticator.setDefault(new Authenticator(){
+                protected PasswordAuthentication  getPasswordAuthentication(){
+                    PasswordAuthentication p = new PasswordAuthentication(proxyServer.get("user"), proxyServer.get("password").toCharArray());
+                    return p;
+                }
+            });
+            System.setProperty("https.proxyUser", proxyServer.get("user"));
+            System.setProperty("https.proxyPassword", proxyServer.get("password"));
+        }
+
+        if (proxyServer.get("port") != null) {
+            System.setProperty("https.proxyPort", proxyServer.get("port"));
+        }
+
+        System.setProperty("https.proxyHost", proxyServer.get("server"));
     }
 
 }
